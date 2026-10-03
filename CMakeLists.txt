@@ -13,6 +13,7 @@ add_executable(streamlens
     src/config.cpp
     src/main.cpp
     src/network/udp_receiver.cpp
+    src/network/udp_sender.cpp
 )
 
 target_include_directories(streamlens

@@ -45,10 +45,11 @@ bool UdpReceiver::open(std::uint16_t port, std::string& error_message) {
     }
 
     sockaddr_in address{};
-    address.sin_family = AF_INET;
-    address.sin_addr.s_addr = htonl(INADDR_ANY);
-    address.sin_port = htons(port);
+    address.sin_family = AF_INET;                   // 指定 IPv4
+    address.sin_addr.s_addr = htonl(INADDR_ANY);    // 表示监听本机所有网络接口
+    address.sin_port = htons(port);                 // 设置监听端口
 
+    // bind() 把 Socket 注册到本机某个 IP 和端口，使操作系统能把对应端口收到的数据交给这个 Socket
     if (::bind(socket_, reinterpret_cast<const sockaddr*>(&address),
                sizeof(address)) < 0) {
         error_message = socket_error_message("bind", last_socket_error());

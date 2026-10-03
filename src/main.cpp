@@ -8,6 +8,7 @@
 
 #include "streamlens/config.h"
 #include "streamlens/network/udp_receiver.h"
+#include "streamlens/network/udp_sender.h"
 #include "streamlens/version.h"
 
 namespace {
@@ -51,6 +52,12 @@ int main(int argc, char* argv[]) {
         return 1;
     }
 
+    streamlens::UdpSender sender;
+    if (!sender.open(config.output_host, config.output_port, error_message)) {
+        std::cerr << "Error: " << error_message << '\n';
+        return 1;
+    }
+
     std::cout << std::unitbuf;
     std::cout << "StreamLens " << STREAMLENS_VERSION_STRING << '\n'
               << "UDP receiver listening on port " << config.input_port << '\n'
@@ -72,6 +79,12 @@ int main(int argc, char* argv[]) {
         if (received > 0) {
             ++packet_count;
             total_bytes += static_cast<std::uint64_t>(received);
+
+            if (sender.send(buffer.data(), static_cast<std::size_t>(received),
+                            error_message) < 0) {
+                std::cerr << "Error: " << error_message << '\n';
+                return 1;
+            }
         }
 
         const auto now = std::chrono::steady_clock::now();
@@ -84,6 +97,7 @@ int main(int argc, char* argv[]) {
     }
 
     receiver.close();
+    sender.close();
     std::cout << "Stopped. packets=" << packet_count
               << " bytes=" << total_bytes << '\n';
     return 0;
