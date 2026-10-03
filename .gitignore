@@ -1,0 +1,16 @@
+# CMake build directories
+/build/
+/build-*/
+
+# IDE files
+.vs/
+.vscode/
+*.suo
+*.user
+
+# C/C++ generated files
+*.obj
+*.o
+*.exe
+*.pdb
+compile_commands.json
