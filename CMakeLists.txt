@@ -12,6 +12,7 @@ option(STREAMLENS_ENABLE_WARNINGS "Enable compiler warnings" ON)
 add_executable(streamlens
     src/config.cpp
     src/main.cpp
+    src/network/udp_receiver.cpp
 )
 
 target_include_directories(streamlens
