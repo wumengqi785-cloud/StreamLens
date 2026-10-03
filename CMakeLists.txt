@@ -10,6 +10,7 @@ option(STREAMLENS_BUILD_TESTS "Build StreamLens tests" ON)
 option(STREAMLENS_ENABLE_WARNINGS "Enable compiler warnings" ON)
 
 add_executable(streamlens
+    src/config.cpp
     src/main.cpp
 )
 
