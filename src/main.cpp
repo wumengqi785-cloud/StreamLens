@@ -3,12 +3,14 @@
 #include <chrono>
 #include <csignal>
 #include <cstdint>
+#include <iomanip>
 #include <iostream>
-#include <thread>
 
 #include "streamlens/config.h"
 #include "streamlens/network/udp_receiver.h"
 #include "streamlens/network/udp_sender.h"
+#include "streamlens/rtp/rtp_parser.h"
+#include "streamlens/statistics/stream_statistics.h"
 #include "streamlens/version.h"
 
 namespace {
@@ -64,8 +66,7 @@ int main(int argc, char* argv[]) {
               << "Press Ctrl+C to stop.\n";
 
     std::array<std::byte, 65536> buffer{};
-    std::uint64_t packet_count = 0;
-    std::uint64_t total_bytes = 0;
+    streamlens::StreamStatistics statistics;
     auto next_stats = std::chrono::steady_clock::now() +
                       std::chrono::seconds(config.stats_interval_seconds);
 
@@ -77,8 +78,16 @@ int main(int argc, char* argv[]) {
             return 1;
         }
         if (received > 0) {
-            ++packet_count;
-            total_bytes += static_cast<std::uint64_t>(received);
+            streamlens::RtpHeader rtp_header;
+            if (streamlens::parse_rtp_header(
+                    buffer.data(), static_cast<std::size_t>(received),
+                    rtp_header, error_message)) {
+                statistics.update(
+                    rtp_header, static_cast<std::size_t>(received));
+            } else {
+                std::cerr << "[WARN] invalid RTP packet: "
+                          << error_message << '\n';
+            }
 
             if (sender.send(buffer.data(), static_cast<std::size_t>(received),
                             error_message) < 0) {
@@ -89,8 +98,18 @@ int main(int argc, char* argv[]) {
 
         const auto now = std::chrono::steady_clock::now();
         if (now >= next_stats) {
-            std::cout << "[STAT] packets=" << packet_count
-                      << " bytes=" << total_bytes << '\n';
+            std::cout << std::fixed << std::setprecision(2)
+                      << "[STAT] packets=" << statistics.packet_count()
+                      << " bytes=" << statistics.byte_count()
+                      << " lost=" << statistics.lost_packet_count()
+                      << " loss_rate=" << statistics.loss_rate() << "%";
+            if (statistics.has_sequence()) {
+                std::cout << " highest_seq="
+                          << statistics.highest_sequence_number();
+            }
+            std::cout << " payload_type=" << static_cast<unsigned>(
+                             statistics.payload_type())
+                      << " ssrc=" << statistics.ssrc() << '\n';
             next_stats = now +
                          std::chrono::seconds(config.stats_interval_seconds);
         }
@@ -98,7 +117,8 @@ int main(int argc, char* argv[]) {
 
     receiver.close();
     sender.close();
-    std::cout << "Stopped. packets=" << packet_count
-              << " bytes=" << total_bytes << '\n';
+    std::cout << "Stopped. packets=" << statistics.packet_count()
+              << " bytes=" << statistics.byte_count()
+              << " lost=" << statistics.lost_packet_count() << '\n';
     return 0;
 }

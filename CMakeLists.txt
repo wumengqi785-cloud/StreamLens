@@ -15,6 +15,7 @@ add_executable(streamlens
     src/rtp/rtp_parser.cpp
     src/network/udp_receiver.cpp
     src/network/udp_sender.cpp
+    src/statistics/stream_statistics.cpp
 )
 
 target_include_directories(streamlens

@@ -38,3 +38,17 @@ target_include_directories(streamlens_rtp_parser_test
 target_compile_features(streamlens_rtp_parser_test PRIVATE cxx_std_17)
 
 add_test(NAME streamlens_rtp_parser_test COMMAND streamlens_rtp_parser_test)
+
+add_executable(streamlens_statistics_test
+    stream_statistics_test.cpp
+    ${PROJECT_SOURCE_DIR}/src/statistics/stream_statistics.cpp
+)
+
+target_include_directories(streamlens_statistics_test
+    PRIVATE
+        ${PROJECT_SOURCE_DIR}/include
+)
+
+target_compile_features(streamlens_statistics_test PRIVATE cxx_std_17)
+
+add_test(NAME streamlens_statistics_test COMMAND streamlens_statistics_test)
